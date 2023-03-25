@@ -14,10 +14,10 @@ def clean_lyrics(lyrics):
     return lyrics
 
 def write_lyrics_file(song_title, artist_name, lyrics):
-    directory = 'lyrics'
+    directory = f'lyrics/{artist_name}'
     if not os.path.exists(directory):
         os.makedirs(directory)
-    filename = f'{directory}/{artist_name} - {song_title}.txt'
+    filename = f'{directory}/{song_title}.txt'
     with open(filename, 'w') as f:
         f.write(lyrics)
 
