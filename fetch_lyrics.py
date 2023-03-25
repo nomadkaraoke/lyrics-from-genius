@@ -2,6 +2,7 @@ import argparse
 import os
 import re
 import lyricsgenius
+from slugify import slugify
 
 def clean_lyrics(lyrics):
     lyrics = lyrics.replace('\\n', '\n')
@@ -9,17 +10,24 @@ def clean_lyrics(lyrics):
     lyrics = re.sub(r'.*?Lyrics([A-Z])', r'\1', lyrics)  # Remove the song name and word "Lyrics" if this has a non-newline char at the start
     lyrics = re.sub(r'[0-9]+Embed$', '', lyrics)  # Remove the word "Embed" at end of line with preceding numbers if found
     lyrics = re.sub(r'(\S)Embed$', r'\1', lyrics)  # Remove the word "Embed" if it has been tacked onto a word at the end of a line
+    lyrics = re.sub(r'^Embed$', r'', lyrics)  # Remove the word "Embed" if it has been tacked onto a word at the end of a line
     lyrics = re.sub(r'.*?\[.*?\].*?', '', lyrics)  # Remove lines containing square brackets
     # add any additional cleaning rules here
     return lyrics
 
 def write_lyrics_file(song_title, artist_name, lyrics):
+    # Replace any non-filename safe characters with a hyphen in the song title and artist name
+    artist_name = slugify(artist_name, lowercase=False)
+    song_title = slugify(song_title, lowercase=False)
+
     directory = f'lyrics/{artist_name}'
     if not os.path.exists(directory):
         os.makedirs(directory)
+
     filename = f'{directory}/{song_title}.txt'
     with open(filename, 'w') as f:
         f.write(lyrics)
+
 
 def main():
     parser = argparse.ArgumentParser(description='Fetch lyrics from Genius.com and write them to text files')
@@ -52,10 +60,14 @@ def main():
         if artist is None:
             print(f'Could not find lyrics for {args.artist_name}')
             return
-        for song in artist.songs:
-            lyrics = clean_lyrics(song.lyrics)
-            write_lyrics_file(song.title, song.artist, lyrics)
-            print(f'Successfully fetched lyrics for "{song.title}" by {song.artist}')
+        for i, song in enumerate(artist.songs):
+            try:
+                lyrics = clean_lyrics(song.lyrics)
+                write_lyrics_file(song.title, song.artist, lyrics)
+                print(f'Successfully fetched lyrics for "{song.title}" by {song.artist}')
+            except Exception as e:
+                print(f'Error processing song {i}: {e}')
+                continue
 
 if __name__ == '__main__':
     main()

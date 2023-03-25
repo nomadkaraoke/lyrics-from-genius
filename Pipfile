@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 lyricsgenius = "*"
+python-slugify = "*"
 
 [dev-packages]
 
